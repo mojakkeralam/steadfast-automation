@@ -121,66 +121,143 @@ def steadfast_payment_request():
         
         print("🔍 Looking for payment method dropdown...")
         
-        # Find dropdown
-        dropdown = WebDriverWait(driver, 15).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, "select"))
-        )
-        print("✓ Dropdown found")
+        # Wait for page to fully load
+        time.sleep(3)
+        
+        # Find dropdown by ID
+        dropdown = None
+        try:
+            dropdown = WebDriverWait(driver, 15).until(
+                EC.presence_of_element_located((By.ID, "paymentMethod"))
+            )
+            print("✓ Dropdown found with ID 'paymentMethod'")
+        except:
+            try:
+                # Fallback: find by class
+                dropdown = driver.find_element(By.CSS_SELECTOR, "select.form-control")
+                print("✓ Dropdown found using class selector")
+            except Exception as e:
+                print(f"❌ Could not find dropdown: {str(e)}")
+                driver.save_screenshot("dropdown_not_found.png")
+                raise
+        
+        # Scroll to dropdown
+        driver.execute_script("arguments[0].scrollIntoView(true);", dropdown)
+        time.sleep(1)
         
         # Create Select object
         select = Select(dropdown)
         
-        # Show all options
+        # Show all options with their actual values
         print("\n📋 Available payment methods:")
         for idx, option in enumerate(select.options):
             option_text = option.text.strip()
             option_value = option.get_attribute('value')
             is_selected = option.is_selected()
-            status = "✓ (selected)" if is_selected else ""
-            print(f"  [{idx}] {option_text} (value: '{option_value}') {status}")
+            status = "✓ CURRENTLY SELECTED" if is_selected else ""
+            print(f"  [{idx}] Text: '{option_text}' | Value: '{option_value}' {status}")
         
-        print("\n🏦 Selecting 'Bank' option...")
+        # Get current selection
+        current_selection = select.first_selected_option
+        print(f"\n🔍 Current selection: '{current_selection.text}' (value={current_selection.get_attribute('value')})")
         
-        # Select Bank (index 1 based on your screenshot)
-        success = False
+        print("\n🏦 Selecting 'Bank' option (value='1')...")
         
-        # Try method 1: Select by index
+        # Bank option has value="1" based on the HTML
+        bank_selected = False
+        
+        # Method 1: Select by value "1"
         try:
-            select.select_by_index(1)
-            print("✓ Selected Bank using index 1")
-            success = True
-        except Exception as e1:
-            print(f"✗ Index method failed: {str(e1)}")
+            print("Method 1: Selecting by value '1'...")
+            select.select_by_value("1")
+            time.sleep(2)
             
-            # Try method 2: Select by visible text
+            # Trigger change event
+            driver.execute_script("arguments[0].dispatchEvent(new Event('change', { bubbles: true }));", dropdown)
+            time.sleep(1)
+            
+            # Verify
+            selected = select.first_selected_option
+            print(f"After selection: '{selected.text}' (value={selected.get_attribute('value')})")
+            
+            if selected.get_attribute('value') == '1' or selected.text.strip().lower() == 'bank':
+                bank_selected = True
+                print("✓ Successfully selected Bank option")
+        except Exception as e1:
+            print(f"✗ Value method failed: {str(e1)}")
+        
+        # Method 2: Select by visible text "Bank"
+        if not bank_selected:
             try:
+                print("\nMethod 2: Selecting by visible text 'Bank'...")
                 select.select_by_visible_text("Bank")
-                print("✓ Selected Bank using visible text")
-                success = True
-            except Exception as e2:
-                print(f"✗ Visible text method failed: {str(e2)}")
+                time.sleep(2)
                 
-                # Try method 3: Select by value
-                try:
-                    select.select_by_value("bank")
-                    print("✓ Selected Bank using value")
-                    success = True
-                except Exception as e3:
-                    print(f"✗ Value method failed: {str(e3)}")
+                # Trigger change event
+                driver.execute_script("arguments[0].dispatchEvent(new Event('change', { bubbles: true }));", dropdown)
+                time.sleep(1)
+                
+                # Verify
+                selected = select.first_selected_option
+                print(f"After selection: '{selected.text}' (value={selected.get_attribute('value')})")
+                
+                if selected.get_attribute('value') == '1' or selected.text.strip().lower() == 'bank':
+                    bank_selected = True
+                    print("✓ Successfully selected Bank option")
+            except Exception as e2:
+                print(f"✗ Text method failed: {str(e2)}")
         
-        if not success:
-            print("❌ Failed to select Bank option")
-            driver.save_screenshot("select_bank_error.png")
-            raise Exception("Could not select Bank from dropdown")
+        # Method 3: JavaScript selection
+        if not bank_selected:
+            try:
+                print("\nMethod 3: Using JavaScript to select Bank...")
+                driver.execute_script("""
+                    var select = arguments[0];
+                    // Find option with value="1" (Bank)
+                    for(var i = 0; i < select.options.length; i++) {
+                        if(select.options[i].value === '1') {
+                            select.selectedIndex = i;
+                            select.dispatchEvent(new Event('change', { bubbles: true }));
+                            break;
+                        }
+                    }
+                """, dropdown)
+                time.sleep(2)
+                
+                # Verify
+                selected = select.first_selected_option
+                print(f"After JavaScript: '{selected.text}' (value={selected.get_attribute('value')})")
+                
+                if selected.get_attribute('value') == '1' or selected.text.strip().lower() == 'bank':
+                    bank_selected = True
+                    print("✓ Successfully selected Bank using JavaScript")
+            except Exception as e3:
+                print(f"✗ JavaScript method failed: {str(e3)}")
         
+        # Final verification
+        time.sleep(2)
+        final_selected = select.first_selected_option
+        final_text = final_selected.text.strip()
+        final_value = final_selected.get_attribute('value')
+        
+        print(f"\n✓ FINAL SELECTION: '{final_text}' (value={final_value})")
+        
+        # Check if Bank is selected (value should be "1")
+        if final_value != '1' and final_text.lower() != 'bank':
+            print(f"⚠️  ERROR: Expected Bank (value=1) but got '{final_text}' (value={final_value})")
+            driver.save_screenshot("wrong_selection.png")
+            
+            # Save page source for debugging
+            with open("selection_error_page.html", "w", encoding="utf-8") as f:
+                f.write(driver.page_source)
+            
+            raise Exception(f"Failed to select Bank. Current: '{final_text}' (value={final_value})")
+        
+        print("✅ Bank option successfully selected and verified!")
+        print(f"   Selected: {final_text} (value={final_value})")
+        
+        # Extra wait to ensure selection is registered
         time.sleep(3)
-        
-        # Verify selection
-        selected_option = select.first_selected_option.text
-        print(f"✓ Currently selected: '{selected_option}'")
-        
-        if selected_option.strip().lower() != "bank":
-            print(f"⚠️  Warning: Selected option is '{selected_option}', not 'Bank'")
         
         # ==================== STEP 4: CLICK SEND REQUEST ====================
         print("\n" + "="*60)
