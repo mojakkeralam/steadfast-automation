@@ -46,6 +46,8 @@ jobs:
         python steadfast_automation.py
       env:
         PYTHONUNBUFFERED: 1
+        STEADFAST_EMAIL: ${{ secrets.STEADFAST_EMAIL }}
+        STEADFAST_PASSWORD: ${{ secrets.STEADFAST_PASSWORD }}
     
     - name: Upload error artifacts (if failed)
       if: failure()
