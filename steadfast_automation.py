@@ -7,11 +7,25 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.support.ui import Select
 import time
 import sys
+import os
 
 def steadfast_payment_request():
     print("=" * 60)
     print("🚀 Steadfast Payment Request Automation Starting...")
     print("=" * 60)
+    
+    # Get credentials from environment variables (GitHub Secrets)
+    email = os.environ.get('STEADFAST_EMAIL')
+    password = os.environ.get('STEADFAST_PASSWORD')
+    
+    # Validate credentials
+    if not email or not password:
+        print("❌ ERROR: Credentials not found!")
+        print("Please set STEADFAST_EMAIL and STEADFAST_PASSWORD in GitHub Secrets")
+        sys.exit(1)
+    
+    print(f"✓ Credentials loaded from environment variables")
+    print(f"✓ Email: {email[:3]}***@{email.split('@')[1]}")  # Hide email partially for security
     
     # Chrome options for headless mode
     chrome_options = Options()
@@ -85,12 +99,12 @@ def steadfast_payment_request():
         
         # Enter credentials
         email_field.clear()
-        email_field.send_keys("mojakkeralam16@gmail.com")
+        email_field.send_keys(email)
         print("✓ Email entered")
         time.sleep(1)
         
         password_field.clear()
-        password_field.send_keys("Libas@12")
+        password_field.send_keys(password)
         print("✓ Password entered")
         time.sleep(1)
         
