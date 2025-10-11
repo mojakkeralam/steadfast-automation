@@ -24,33 +24,25 @@ jobs:
         python -m pip install --upgrade pip
         pip install selenium==4.15.2
     
-    - name: Set up Chrome
-      uses: browser-actions/setup-chrome@v1
-      with:
-        chrome-version: stable
-    
-    - name: Install ChromeDriver
+    - name: Install Chrome and ChromeDriver
       run: |
-        # Get Chrome version
-        CHROME_VERSION=$(google-chrome --version | awk '{print $3}' | cut -d'.' -f1)
-        echo "Chrome version: $CHROME_VERSION"
-        
-        # Install ChromeDriver using apt
+        # Install chromium browser and chromedriver
         sudo apt-get update
-        sudo apt-get install -y chromium-chromedriver
+        sudo apt-get install -y chromium-browser chromium-chromedriver
         
-        # Create symlink
-        sudo ln -sf /usr/lib/chromium-browser/chromedriver /usr/bin/chromedriver
+        # Verify versions
+        echo "=== Chromium Version ==="
+        chromium-browser --version
         
-        # Verify installation
-        echo "Verifying installation..."
-        google-chrome --version
+        echo "=== ChromeDriver Version ==="
         chromedriver --version
+        
+        echo "=== ChromeDriver Location ==="
         which chromedriver
     
     - name: Run automation script
       run: |
-        echo "Starting automation..."
+        echo "Starting Steadfast automation..."
         python steadfast_automation.py
       env:
         PYTHONUNBUFFERED: 1
