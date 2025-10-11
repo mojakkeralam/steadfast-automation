@@ -26,26 +26,34 @@ def steadfast_payment_request():
     chrome_options.add_experimental_option('useAutomationExtension', False)
     
     # ChromeDriver service setup - try multiple paths
-    chromedriver_paths = [
-        '/usr/bin/chromedriver',
-        '/usr/lib/chromium-browser/chromedriver',
-        'chromedriver'
-    ]
+    import os
+    import shutil
+    
+    # Find chromedriver
+    chromedriver_path = shutil.which('chromedriver')
+    if not chromedriver_path:
+        chromedriver_paths = [
+            '/usr/bin/chromedriver',
+            '/usr/lib/chromium-browser/chromedriver',
+        ]
+        for path in chromedriver_paths:
+            if os.path.exists(path):
+                chromedriver_path = path
+                break
+    
+    print(f"Using ChromeDriver at: {chromedriver_path}")
     
     driver = None
-    for path in chromedriver_paths:
-        try:
-            print(f"Trying ChromeDriver at: {path}")
-            service = Service(path)
+    try:
+        if chromedriver_path:
+            service = Service(chromedriver_path)
             driver = webdriver.Chrome(service=service, options=chrome_options)
-            print(f"✓ ChromeDriver loaded from: {path}")
-            break
-        except Exception as e:
-            print(f"✗ Failed to load from {path}: {str(e)}")
-            continue
-    
-    if driver is None:
-        print("❌ Could not initialize ChromeDriver from any path")
+        else:
+            # Try without explicit path
+            driver = webdriver.Chrome(options=chrome_options)
+        print(f"✓ ChromeDriver initialized successfully")
+    except Exception as e:
+        print(f"❌ Failed to initialize ChromeDriver: {str(e)}")
         sys.exit(1)
     
     try:
