@@ -19,32 +19,60 @@ jobs:
       with:
         python-version: '3.10'
     
-    - name: Install dependencies
+    - name: Install Python dependencies
       run: |
+        python -m pip install --upgrade pip
         pip install selenium==4.15.2
-        pip install webdriver-manager
     
-    - name: Install Chrome and ChromeDriver
+    - name: Set up Chrome
+      uses: browser-actions/setup-chrome@v1
+      with:
+        chrome-version: stable
+    
+    - name: Install ChromeDriver
       run: |
-        # Chrome install
-        wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
-        echo "deb http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
-        sudo apt-get update
-        sudo apt-get install -y google-chrome-stable
-        
-        # ChromeDriver install
+        # Get Chrome version
         CHROME_VERSION=$(google-chrome --version | awk '{print $3}' | cut -d'.' -f1)
-        CHROMEDRIVER_VERSION=$(curl -s "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_${CHROME_VERSION}")
-        wget -q "https://chromedriver.storage.googleapis.com/${CHROMEDRIVER_VERSION}/chromedriver_linux64.zip"
-        unzip chromedriver_linux64.zip
-        sudo mv chromedriver /usr/bin/chromedriver
-        sudo chmod +x /usr/bin/chromedriver
+        echo "Chrome version: $CHROME_VERSION"
+        
+        # Install ChromeDriver using apt
+        sudo apt-get update
+        sudo apt-get install -y chromium-chromedriver
+        
+        # Create symlink
+        sudo ln -sf /usr/lib/chromium-browser/chromedriver /usr/bin/chromedriver
         
         # Verify installation
+        echo "Verifying installation..."
         google-chrome --version
         chromedriver --version
+        which chromedriver
     
     - name: Run automation script
-      run: python steadfast_automation.py
+      run: |
+        echo "Starting automation..."
+        python steadfast_automation.py
       env:
-        DISPLAY: :99
+        PYTHONUNBUFFERED: 1
+    
+    - name: Upload error artifacts (if failed)
+      if: failure()
+      uses: actions/upload-artifact@v3
+      with:
+        name: error-logs
+        path: |
+          error_screenshot.png
+          error_page_source.html
+          *.png
+          *.html
+        if-no-files-found: ignore
+    
+    - name: Upload success artifacts
+      if: success()
+      uses: actions/upload-artifact@v3
+      with:
+        name: success-logs
+        path: |
+          success_screenshot.png
+          *.png
+        if-no-files-found: ignore
