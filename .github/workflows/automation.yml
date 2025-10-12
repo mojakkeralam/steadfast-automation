@@ -2,8 +2,8 @@ name: Steadfast Payment Request Automation
 
 on:
   schedule:
-    # প্রতিদিন রাত 9:35 PM Bangladesh Time (15:35 UTC)
-    - cron: '35 15 * * *'
+    # প্রতিদিন সকাল 10:15 AM Bangladesh Time (04:15 UTC)
+    - cron: '15 4 * * *'
   workflow_dispatch: # Manual trigger এর জন্য
 
 jobs:
