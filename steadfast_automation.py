@@ -8,6 +8,7 @@ from selenium.webdriver.support.ui import Select
 import time
 import sys
 import os
+import shutil
 
 def steadfast_payment_request():
     print("=" * 60)
@@ -39,11 +40,7 @@ def steadfast_payment_request():
     chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
     chrome_options.add_experimental_option('useAutomationExtension', False)
     
-    # ChromeDriver service setup - try multiple paths
-    import os
-    import shutil
-    
-    # Find chromedriver
+    # ChromeDriver service setup
     chromedriver_path = shutil.which('chromedriver')
     if not chromedriver_path:
         chromedriver_paths = [
@@ -63,7 +60,6 @@ def steadfast_payment_request():
             service = Service(chromedriver_path)
             driver = webdriver.Chrome(service=service, options=chrome_options)
         else:
-            # Try without explicit path
             driver = webdriver.Chrome(options=chrome_options)
         print(f"✓ ChromeDriver initialized successfully")
     except Exception as e:
