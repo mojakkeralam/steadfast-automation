@@ -35,12 +35,13 @@ def process_payment_page(driver, site_name):
     print(f"{'='*60}")
     
     print("🔍 Looking for payment method dropdown...")
-    time.sleep(5)
+    print("⏳ Waiting 20 seconds for page to fully load...")
+    time.sleep(20)  # Wait for page load
     
     # Try to find dropdown
     dropdown = None
     try:
-        dropdown = WebDriverWait(driver, 10).until(
+        dropdown = WebDriverWait(driver, 15).until(
             EC.presence_of_element_located((By.ID, "paymentMethod"))
         )
         print("✓ Dropdown found")
@@ -69,15 +70,19 @@ def process_payment_page(driver, site_name):
     print("\n🏦 Selecting 'Bank' option...")
     try:
         select.select_by_value("1")
-        time.sleep(2)
-        driver.execute_script("arguments[0].dispatchEvent(new Event('change'));", dropdown)
-        time.sleep(2)
         print("✓ Bank selected")
+        print("⏳ Waiting 10 seconds after selection...")
+        time.sleep(10)  # Wait after selection
+        
+        driver.execute_script("arguments[0].dispatchEvent(new Event('change'));", dropdown)
+        print("⏳ Waiting 10 seconds after triggering change event...")
+        time.sleep(10)  # Wait after change event
     except:
         try:
             select.select_by_visible_text("Bank")
-            time.sleep(2)
             print("✓ Bank selected")
+            print("⏳ Waiting 10 seconds after selection...")
+            time.sleep(10)  # Wait after selection
         except Exception as e:
             print(f"❌ Could not select Bank: {str(e)}")
             return False
@@ -85,11 +90,17 @@ def process_payment_page(driver, site_name):
     # Click Send Request button
     print("\n✅ Clicking 'Send Request' button...")
     try:
-        send_button = WebDriverWait(driver, 10).until(
+        send_button = WebDriverWait(driver, 15).until(
             EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'Send Request')]"))
         )
         send_button.click()
-        time.sleep(5)
+        print("✓ Button clicked!")
+        print("⏳ Waiting 10 seconds after clicking button...")
+        time.sleep(10)  # Wait after button click
+        
+        print("⏳ Waiting additional 10 seconds for submission to complete...")
+        time.sleep(10)  # Extra wait for submission
+        
         print("✓ Request submitted!")
         return True
     except Exception as e:
@@ -112,7 +123,8 @@ def try_login_and_payment(driver, site_config, email, password):
         # Login
         print(f"\n📍 Navigating to {site_name} login page...")
         driver.get(login_url)
-        time.sleep(5)
+        print("⏳ Waiting 20 seconds for page to load...")
+        time.sleep(20)  # Wait for page load
         
         print(f"🔐 Entering credentials...")
         
@@ -123,15 +135,19 @@ def try_login_and_payment(driver, site_config, email, password):
         
         email_field.clear()
         email_field.send_keys(email)
+        print("⏳ Waiting 10 seconds after entering email...")
+        time.sleep(10)  # Wait after email
+        
         password_field.clear()
         password_field.send_keys(password)
-        time.sleep(1)
+        print("⏳ Waiting 10 seconds after entering password...")
+        time.sleep(10)  # Wait after password
         
         login_button = driver.find_element(By.XPATH, "//button[@type='submit']")
         login_button.click()
         print("✓ Login button clicked")
-        
-        time.sleep(10)
+        print("⏳ Waiting 20 seconds for dashboard to load...")
+        time.sleep(20)  # Wait for dashboard load
         
         # Check login success
         if 'login' in driver.current_url.lower():
@@ -143,7 +159,8 @@ def try_login_and_payment(driver, site_config, email, password):
         # Go to payment page
         print(f"\n💰 Going to payment request page...")
         driver.get(payment_url)
-        time.sleep(5)
+        print("⏳ Waiting 20 seconds for payment page to load...")
+        time.sleep(20)  # Wait for payment page load
         
         if 'payment-request' not in driver.current_url:
             print(f"⚠️  Could not reach payment page on {site_name}")
@@ -239,7 +256,8 @@ def payment_automation():
             # Navigate to domain first
             print("📍 Navigating to Steadfast...")
             driver.get("https://steadfast.com.bd")
-            time.sleep(3)
+            print("⏳ Waiting 20 seconds for page to load...")
+            time.sleep(20)  # Wait for page load
             
             # Add cookies
             print("🍪 Loading saved cookies...")
@@ -261,11 +279,14 @@ def payment_automation():
                         continue
             
             print(f"✓ Loaded {cookies_added} cookies")
+            print("⏳ Waiting 10 seconds after loading cookies...")
+            time.sleep(10)  # Wait after loading cookies
             
             # Try to access payment page
             print("\n💰 Accessing payment page with cookies...")
             driver.get("https://steadfast.com.bd/user/payment-request")
-            time.sleep(5)
+            print("⏳ Waiting 20 seconds for payment page to load...")
+            time.sleep(20)  # Wait for payment page load
             
             current_url = driver.current_url
             print(f"✓ Current URL: {current_url}")
