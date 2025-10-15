@@ -2,8 +2,8 @@ name: Steadfast Payment Request Automation
 
 on:
   schedule:
-    # প্রতিদিন সকাল 10:00 AM Bangladesh Time (04:00 UTC)
-    - cron: '0 4 * * *'
+    # প্রতিদিন সকাল 10:30 AM Bangladesh Time (04:30 UTC)
+    - cron: '30 4 * * *'
   workflow_dispatch: # Manual trigger এর জন্য
 
 jobs:
@@ -48,6 +48,7 @@ jobs:
         PYTHONUNBUFFERED: 1
         STEADFAST_EMAIL: ${{ secrets.STEADFAST_EMAIL }}
         STEADFAST_PASSWORD: ${{ secrets.STEADFAST_PASSWORD }}
+        STEADFAST_COOKIES: ${{ secrets.STEADFAST_COOKIES }}
     
     - name: Upload error artifacts (if failed)
       if: failure()
